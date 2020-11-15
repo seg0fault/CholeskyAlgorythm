@@ -12,10 +12,10 @@ int block::cholesky_block(block& dest, double *block_vector, double epsilon)
     double *cur_start = start;
     double *cur_dest = dest.start;
     double *dest_k;
-    for(i = 0; i < size; i++)
+    for(i = 0; i < r_size; i++)
     {
         r_ii = cur_start[i];
-        for(k = 0, dest_k = dest.start; k < i; k++, dest_k += size)
+        for(k = 0, dest_k = dest.start; k < i; k++, dest_k += size_it)
             r_ii -= dest_k[i] * dest_k[i] * block_vector[k];
         if(r_ii < 0)
             d_ii = block_vector[i] = -1;
@@ -23,21 +23,21 @@ int block::cholesky_block(block& dest, double *block_vector, double epsilon)
             d_ii = block_vector[i] = 1;
         if((r_ii = cur_dest[i] = sqrt(fabs(r_ii))) < epsilon)
         {
-            printf("%e ", sqrt(fabs(r_ii)));
+//            printf("%e ", sqrt(fabs(r_ii)));
             return -1;
         }
-        for(j = i + 1; j < size; j++)
+        for(j = i + 1; j < r_size; j++)
         {
             r_ij = cur_start[j];
 //            printf("%lf / %lf\n", r_ij, r_ii);
-            for(k = 0, dest_k = dest.start; k < i; k++, dest_k += size)
+            for(k = 0, dest_k = dest.start; k < i; k++, dest_k += size_it)
             {
                 r_ij -= dest_k[i] * block_vector[k] * dest_k[j];
             }
             cur_dest[j] = r_ij / (r_ii * d_ii);
         }
-        cur_start += size;
-        cur_dest += size;
+        cur_start += size_it;
+        cur_dest += size_it;
     }
 //    dest.print_block();
     return 0;
@@ -52,14 +52,14 @@ block::A_RtDR(double *Rt, double *R, double *D)
     double sum;
     for (i = 0; i < size; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < r_size; j++)
         {
             sum = 0;
             for (k = 0; k < size; k++)
             {
-                sum += Rt[k * size + i] * D[k] * R[k * size + j];
+                sum += Rt[k * size_it + i] * D[k] * R[k * size_it + j];
             }
-            start[i * size + j] -= sum;
+            start[i * size_it + j] -= sum;
         }
     }
 }
@@ -73,34 +73,14 @@ block::minusVR(double *V, double *R)
     double sum;
     for (i = 0; i < size; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < r_size; j++)
         {
             sum = 0;
             for (k = 0; k < size; k++)
             {
-                sum += V[i * size + k] * R[k * size + j];
+                sum += V[i * size_it + k] * R[k * size_it + j];
             }
-            start[i * size + j] -= sum;
-        }
-    }
-}
-
-void block::VDVt(double *Vt, double *V, double *D)
-{
-    int i;
-    int j;
-    int k;
-    double sum;
-    for (i = 0; i < size; i++)
-    {
-        for (j = 0; j < size; j++)
-        {
-            sum = 0;
-            for (k = 0; k < size; k++)
-            {
-                sum += Vt[i * size + k] * D[k] * V[j * size + k];
-            }
-            start[i * size + j] += sum;
+            start[i * size_it + j] -= sum;
         }
     }
 }
@@ -114,14 +94,34 @@ block::multiplyAB(double *A, double *B)
     double sum;
     for (i = 0; i < size; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < r_size; j++)
         {
             sum = 0;
             for (k = 0; k < size; k++)
             {
-                sum += A[i * size + k] * B[k * size + j];
+                sum += A[i * size_it + k] * B[k * size_it + j];
             }
-            start[i * size + j] = sum;
+            start[i * size_it + j] = sum;
+        }
+    }
+}
+
+void block::VDVt(double *Vt, double *V, double *D, int size_small)
+{
+    int i;
+    int j;
+    int k;
+    double sum;
+    for (i = 0; i < size; i++)
+    {
+        for (j = 0; j < r_size; j++)
+        {
+            sum = 0;
+            for (k = 0; k < size_small; k++)
+            {
+                sum += Vt[i * size_it + k] * D[k] * V[j * size_it + k];
+            }
+            start[i * size_it + j] += sum;
         }
     }
 }
@@ -133,16 +133,16 @@ block::plusAB(double *A, double *B)
     int j;
     int k;
     double sum;
-    for (i = 0; i < size; i++)
+    for (i = 0; i < size_it; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < size_it; j++)
         {
             sum = 0;
-            for (k = 0; k < size; k++)
+            for (k = 0; k < size_it; k++)
             {
-                sum += A[i * size + k] * B[k * size + j];
+                sum += A[i * size_it + k] * B[k * size_it + j];
             }
-            start[i * size + j] += sum;
+            start[i * size_it + j] += sum;
         }
     }
 }
@@ -154,16 +154,16 @@ block::plusABt(double *A, double *B)
     int j;
     int k;
     double sum;
-    for (i = 0; i < size; i++)
+    for (i = 0; i < size_it; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < size_it; j++)
         {
             sum = 0;
-            for (k = 0; k < size; k++)
+            for (k = 0; k < size_it; k++)
             {
-                sum += A[i * size + k] * B[j * size + k];
+                sum += A[i * size_it + k] * B[j * size_it + k];
             }
-            start[i * size + j] += sum;
+            start[i * size_it + j] += sum;
         }
     }
 }
@@ -175,16 +175,16 @@ block::plusAtB(double *A, double *B)
     int j;
     int k;
     double sum;
-    for (i = 0; i < size; i++)
+    for (i = 0; i < size_it; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < size_it; j++)
         {
             sum = 0;
-            for (k = 0; k < size; k++)
+            for (k = 0; k < size_it; k++)
             {
-                sum += A[k * size + i] * B[k * size + j];
+                sum += A[k * size_it + i] * B[k * size_it + j];
             }
-            start[i * size + j] += sum;
+            start[i * size_it + j] += sum;
         }
     }
 }
@@ -196,16 +196,16 @@ block::plusAtBt(double *A, double *B)
     int j;
     int k;
     double sum;
-    for (i = 0; i < size; i++)
+    for (i = 0; i < size_it; i++)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < size_it; j++)
         {
             sum = 0;
-            for (k = 0; k < size; k++)
+            for (k = 0; k < size_it; k++)
             {
-                sum += A[k * size + i] * B[j * size + k];
+                sum += A[k * size_it + i] * B[j * size_it + k];
             }
-            start[i * size + j] += sum;
+            start[i * size_it + j] += sum;
         }
     }
 }
@@ -214,7 +214,7 @@ void
 block::minusE()
 {
     double *s = start;
-    for(int i = 0; i < size; i++, s += size + 1)
+    for(int i = 0; i < size; i++, s += size_it + 1)
         *s = *s - 1;
 }
 
@@ -226,24 +226,22 @@ block::reverse_block_r(block& dest)
     int k;
     double r_ii;
     double sum;
-    double *dest_curr = dest.start;
-    for (i = size - 1; i >= 0; i--)
+    for (i = r_size - 1; i >= 0; i--)
     {
-        r_ii = start[i * size + i];
+        r_ii = start[i * size_it + i];
         r_ii = 1 / r_ii;
-        dest.start[i * size + i] = r_ii;
+        dest.start[i * size_it + i] = r_ii;
         for (j = 0; j < i; j++)
-            dest.start[i * size + j] = 0;
-        for (j = i + 1; j < size; j++)
+            dest.start[i * size_it + j] = 0;
+        for (j = i + 1; j < r_size; j++)
         {
             sum = 0;
             for (k = i + 1; k <= j; k++)
             {
-                sum += start[i * size + k] * dest.start[k * size + j];
+                sum += start[i * size_it + k] * dest.start[k * size_it + j];
             }
-            dest.start[i * size + j] = -sum * r_ii;
+            dest.start[i * size_it + j] = -sum * r_ii;
         }
-        dest_curr += size;
     }
 }
 
@@ -256,14 +254,37 @@ block::DRA(block& R, double *D)
     double sum;
     for (i = size - 1; i >= 0; i--)
     {
-        for (j = 0; j < size; j++)
+        for (j = 0; j < r_size; j++)
         {
             sum = 0;
             for (k = 0; k <= i; k++)
             {
-                sum += R.start[k * size + i] * start[k * size + j];
+                sum += R.start[k * size_it + i] * start[k * size_it + j];
             }
-            start[i * size + j] = D[i] * sum;
+            start[i * size_it + j] = D[i] * sum;
         }
     }
 }
+
+/*
+void
+block::DRA(block& R, double *D)
+{
+    int i;
+    int j;
+    int k;
+    double sum;
+    for (i = 0; i < size; i++)
+    {
+        for (j = 0; j < r_size; j++)
+        {
+            sum = 0;
+            for (k = i; k <= size; k++)
+            {
+                sum += R.start[i * size_it + k] * start[k * size_it + j];
+            }
+            start[i * size_it + j] = D[i] * sum;
+        }
+    }
+}
+*/

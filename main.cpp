@@ -70,12 +70,14 @@ int main(int argc, char *argv[])
         printf("Incorrect s\n");
         return 2;
     }
+    /*
     if(n % m)
     {
         printf("n mod m != 0 not supported yet :(\n");
         m = get_closest_divisor(n, m);
         printf("Warning! m redefined as %d\n", m);
     }
+    */
     if(r > n)
         r = n;
     if(!s)
@@ -217,6 +219,7 @@ int main(int argc, char *argv[])
 
     printf("A_reversed: \n");
     A_reverse.print_matrix(r);
+//    A_reverse.print_debug();
     t1 = clock();
     printf ("%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d\n", argv[0], R.residual(A, A_reverse), t/CLOCKS_PER_SEC, s, n, m);
     t1 = clock() - t;

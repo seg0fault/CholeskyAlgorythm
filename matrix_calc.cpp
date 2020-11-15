@@ -69,16 +69,24 @@ int matrix::get_cholesky(matrix& R, double *D, matrix& V)
     int j;
     int k;
     double *R_ki;
-    R_ii.allocate_block(block_size);
+    R_ii.allocate_block();
     for (i = 0; i < matrix_size_blocks; i++)
     {
-        R_ii.get_block(get_block_address(i,i));
+        if(i != matrix_size_blocks - 1)
+        {
+            R_ii.get_block(get_block_address(i,i), block_size, block_size);
+            R.R_ii.link_block(R.get_block_address(i,i), block_size, block_size);
+        }
+        else
+        {
+            R_ii.get_block(get_block_address(i,i), block_size, r_block_size);
+            R.R_ii.link_block(R.get_block_address(i,i), block_size, r_block_size);
+        }
         for (k = 0; k < i; k++)
         {
             R_ki = R.get_block_address(k,i);
             R_ii.A_RtDR(R_ki, R_ki, D + block_size * k);
         }
-        R.R_ii.link_block(R.get_block_address(i,i), block_size);
         if(R_ii.cholesky_block(R.R_ii, D + i * block_size, epsilon))
         {
             printf("ERROR! BLOCK (%d, %d) looks bad\n", i, i);
@@ -88,8 +96,16 @@ int matrix::get_cholesky(matrix& R, double *D, matrix& V)
         R_ii.put_block(V.get_block_address(i,i));
         for(j = i + 1; j < matrix_size_blocks; j++)
         {
-            R.R_ij.link_block(R.get_block_address(i, j), block_size);
-            R.R_ij.get_block(get_block_address(i, j));
+            if(j != matrix_size_blocks - 1)
+            {
+                R.R_ij.link_block(R.get_block_address(i, j), block_size, block_size);
+                R.R_ij.get_block(get_block_address(i, j), block_size, block_size);
+            }
+            else
+            {
+                R.R_ij.link_block(R.get_block_address(i, j), block_size, r_block_size);
+                R.R_ij.get_block(get_block_address(i, j), block_size, r_block_size);
+            }
             for (k = 0; k < i; k++)
             {
                 R.R_ij.A_RtDR(R.get_block_address(k,i), R.get_block_address(k,j), D + block_size * k);
@@ -108,17 +124,26 @@ matrix::get_reversed_r(matrix& V)
     int i;
     int j;
     int k;
-    R_ii.allocate_block(block_size);
-    for(i = 0; i < matrix_size_blocks; i++)
+    R_ii.allocate_block();
+    int size_i = block_size;
+    int size_j;
+    for (i = 0; i < matrix_size_blocks; i++)
     {
-        for(j = i + 1; j < matrix_size_blocks; j++)
+        size_j = block_size;
+        if (i == matrix_size_blocks - 1)
+            size_i = r_block_size;
+        for (j = i + 1; j < matrix_size_blocks; j++)
         {
+            if (j == matrix_size_blocks - 1)
+                size_j = r_block_size;
             R_ii.clear_block();
-            R_ij.link_block(V.get_block_address(i, j), block_size);
-            for(k = i; k < j; k++)
+            R_ii.size = size_i;
+            R_ii.r_size = size_j;
+            for (k = i; k < j; k++)
             {
                 R_ii.minusVR(V.get_block_address(i,k), get_block_address(k, j));
             }
+            R_ij.link_block(V.get_block_address(i, j), size_i, size_j);
             R_ij.multiplyAB(R_ii.get_start(), V.get_block_address(j, j));
         }
     }
@@ -131,15 +156,24 @@ matrix::get_reversed_a(matrix& Ar, double *D)
     int i;
     int j;
     int k;
+    int size_i = block_size;
+    int size_j;
     for(i = 0; i < matrix_size_blocks; i++)
     {
+        size_j = block_size;
+        if (i == matrix_size_blocks - 1)
+            size_i = r_block_size;
         for(j = i; j < matrix_size_blocks; j++)
         {
-            R_ii.link_block(Ar.get_block_address(i, j), block_size);
+            if (j == matrix_size_blocks - 1)
+                size_j = r_block_size;
+            R_ii.link_block(Ar.get_block_address(i, j), size_i, size_j);
             for(k = j; k < matrix_size_blocks; k++)
             {
-                R_ii.VDVt(get_block_address(i, k), get_block_address(j, k), D + block_size * k);
-            }
+                if(k != matrix_size_blocks - 1)
+                    R_ii.VDVt(get_block_address(i, k), get_block_address(j, k), D + block_size * k, block_size);
+                else
+                    R_ii.VDVt(get_block_address(i, k), get_block_address(j, k), D + block_size * k, r_block_size);            }
         }
     }
 }
@@ -150,11 +184,18 @@ matrix::residual(matrix &A, matrix &Ar)
     int i;
     int j;
     int k;
+    int size_i = block_size;
+    int size_j;
     for (i = 0; i < matrix_size_blocks; i++)
     {
+        size_j = block_size;
+        if (i == matrix_size_blocks - 1)
+            size_i = r_block_size;
         for (j = i; j < matrix_size_blocks; j++)
         {
-            R_ii.link_block(get_block_address(i, j), block_size);
+            if (j == matrix_size_blocks - 1)
+                size_j = r_block_size;
+            R_ii.link_block(get_block_address(i, j), size_i, size_j);
             R_ii.clear_block();
             for(k = 0; k < matrix_size_blocks; k++)
             {

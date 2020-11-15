@@ -17,6 +17,8 @@ matrix::matrix_allocate(int n, int m)
     matrix_size = n;
     block_size = m;
     r_block_size = n % m;
+    R_ii.size_it = block_size;
+    R_ij.size_it = block_size;
     if (r_block_size)
         matrix_size_blocks = n / m + 1;
     else

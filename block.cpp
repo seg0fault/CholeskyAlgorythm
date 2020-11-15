@@ -1,23 +1,22 @@
 #include "block.h"
 
 int
-block::allocate_block(int size_)
+block::allocate_block()
 {
     if(start)
     {
         printf("Trying to reallocate a block\n");
         return -1;
     }
-    start = (double*) calloc ( size_ * size_, sizeof (double));
+    start = (double*) calloc ( size_it * size_it, sizeof (double));
     if(!start)
         return -2;
-    size = size_;
     is_independant = 1;
     return 0;
 }
 
 void
-block::link_block(double *start_, int size_)
+block::link_block(double *start_, int size_, int r_size_)
 {
     if(is_independant)
     {
@@ -27,6 +26,7 @@ block::link_block(double *start_, int size_)
     is_independant = 0;
     start = start_;
     size = size_;
+    r_size = r_size_;
 }
 
 void
@@ -54,14 +54,22 @@ block::free_block()
 }
 
 void
-block::get_block(double *src)
+block::get_block(double *src, int size_, int r_size_)
 {
     int i;
+    int j;
+    int index = 0;
     if(!start)
         return;
-    for (i = 0; i < size * size; i++)
+    r_size = r_size_;
+    size = size_;
+    for (i = 0; i < size; i++)
     {
-        start[i] = src[i];
+        index = i * size_it;
+        for (j = 0; j < r_size; j++, index++)
+        {
+            start[index] = src[index];
+        }
     }
 }
 
@@ -69,11 +77,17 @@ void
 block::put_block(double *dest)
 {
     int i;
+    int j;
+    int index;
     if(!start)
         return;
-    for (i = 0; i < size * size; i++)
+    for (i = 0; i < size; i++)
     {
-        dest[i] = start[i];
+        index = i * size_it;
+        for (j = 0; j < r_size; j++, index++)
+        {
+            dest[index] = start[index];
+        }
     }
 }
 
@@ -90,12 +104,12 @@ block::print_block()
     }
     for(i = 0; i < size; i++)
     {
-        for(j = 0; j < size; j++)
+        for(j = 0; j < r_size; j++)
         {
 //            printf("%10.3e ", ptr[j]);
             printf("%lf ", ptr[j]);
         }
-        ptr += size;
+        ptr += size_it;
         printf("\n");
     }
     printf("\n");
@@ -104,7 +118,7 @@ block::print_block()
 void
 block::clear_block()
 {
-    memset(start, 0, size * size * sizeof (double));
+    memset(start, 0, size_it * size_it * sizeof (double));
 }
 
 
