@@ -21,15 +21,12 @@ int block::cholesky_block(block& dest, double *block_vector, double epsilon)
             d_ii = block_vector[i] = -1;
         else
             d_ii = block_vector[i] = 1;
-        if((r_ii = cur_dest[i] = sqrt(fabs(r_ii))) < epsilon)
-        {
-//            printf("%e ", sqrt(fabs(r_ii)));
+        if(fabs(r_ii) < epsilon)
             return -1;
-        }
+        cur_dest[i] = r_ii = sqrt(fabs(r_ii));
         for(j = i + 1; j < r_size; j++)
         {
             r_ij = cur_start[j];
-//            printf("%lf / %lf\n", r_ij, r_ii);
             for(k = 0, dest_k = dest.start; k < i; k++, dest_k += size_it)
             {
                 r_ij -= dest_k[i] * block_vector[k] * dest_k[j];
@@ -39,7 +36,6 @@ int block::cholesky_block(block& dest, double *block_vector, double epsilon)
         cur_start += size_it;
         cur_dest += size_it;
     }
-//    dest.print_block();
     return 0;
 }
 
@@ -265,26 +261,3 @@ block::DRA(block& R, double *D)
         }
     }
 }
-
-/*
-void
-block::DRA(block& R, double *D)
-{
-    int i;
-    int j;
-    int k;
-    double sum;
-    for (i = 0; i < size; i++)
-    {
-        for (j = 0; j < r_size; j++)
-        {
-            sum = 0;
-            for (k = i; k <= size; k++)
-            {
-                sum += R.start[i * size_it + k] * start[k * size_it + j];
-            }
-            start[i * size_it + j] = D[i] * sum;
-        }
-    }
-}
-*/

@@ -192,11 +192,11 @@ int main(int argc, char *argv[])
     printf("A:\n");
     A.print_matrix(r);
 //    A.print_debug();
-    printf("Matrix norm = %10.3e \n", A.get_norm());
+    printf("Matrix norm = %10.3e\n\n", A.get_norm());
     t = clock();
     if(A.get_cholesky(R, D, V))
     {
-        printf("Bad matrix\n");
+        printf("Invertible matrix\n");
         if(fp)
             fclose(fp);
         free(D);

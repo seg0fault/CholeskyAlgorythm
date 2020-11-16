@@ -6,8 +6,8 @@
 #include <cmath>
 #include <cstring>
 #include "block.h"
-//void *memset(void *s, int c, size_t n);
 
+#define PRECISION 1e-15
 
 //Функции автозаполнения
 double function_1(int n, int i, int j);

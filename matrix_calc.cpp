@@ -24,10 +24,7 @@ matrix::get_norm()
                 ptr = it;
                 r0 = 0;
                 for(j = 0; j < block_size; j++, ptr +=  block_size)
-                {
                     r0 += fabs(*ptr);
-//                    printf("[v]%10.3e \n", *ptr);
-                }
                 block_vector[i] += r0;
             }
             it = ptr - block_size + 1;
@@ -39,10 +36,7 @@ matrix::get_norm()
             {
                 r0 = 0;
                 for(j = 0; j < block_size; j++, it++)
-                {
                     r0 += fabs(*it);
-//                    printf("[h]%10.3e \n", *it);
-                }
                 block_vector[i] += r0;
             }
         }
@@ -50,16 +44,13 @@ matrix::get_norm()
         {
             r0 = 0;
             for(j = 0; j < r_block_size; j++, it++)
-            {
                 r0 += fabs(*it);
-//                printf("[l]%10.3e \n", *it);
-            }
             block_vector[i] += r0;
             if(block_vector[i] > max)
                 max = block_vector[i];
         }
     }
-    epsilon = max * 1e-16;
+    epsilon = max * PRECISION;
     return max;
 }
 
@@ -89,7 +80,7 @@ int matrix::get_cholesky(matrix& R, double *D, matrix& V)
         }
         if(R_ii.cholesky_block(R.R_ii, D + i * block_size, epsilon))
         {
-            printf("ERROR! BLOCK (%d, %d) looks bad\n", i, i);
+            printf("ERROR! BLOCK (%d, %d) invertible\n", i, i);
             return -1;
         }
         R.R_ii.reverse_block_r(R_ii);

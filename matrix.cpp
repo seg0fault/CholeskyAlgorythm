@@ -69,7 +69,6 @@ matrix::init_matrix_formula(double (*f)(int, int, int))
             }
             index += (block_size - r_block_size);
         }
-//        index += (block_size - r_block_size) * block_size; //???
         offset_i += block_size;
     }
     for(i = 0; i < r_block_size; i++)
