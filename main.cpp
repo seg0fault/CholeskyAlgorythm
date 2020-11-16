@@ -11,18 +11,6 @@
 #include <unistd.h>
 
 //n m r s file
-int get_closest_divisor(int a, int b);
-
-int get_closest_divisor(int a, int b)
-{
-    int guess1 = b;
-    int guess2 = b;
-    if(!(a % b))
-        return b;
-    for(; a % guess1; guess1--);
-    for(; a % guess2; guess2++);
-    return guess2 - b < b - guess1 ? guess2 : guess1;
-}
 
 int main(int argc, char *argv[])
 {
@@ -70,14 +58,6 @@ int main(int argc, char *argv[])
         printf("Incorrect s\n");
         return 2;
     }
-    /*
-    if(n % m)
-    {
-        printf("n mod m != 0 not supported yet :(\n");
-        m = get_closest_divisor(n, m);
-        printf("Warning! m redefined as %d\n", m);
-    }
-    */
     if(r > n)
         r = n;
     if(!s)
@@ -191,7 +171,6 @@ int main(int argc, char *argv[])
     printf("Matrix initialized OK\n");
     printf("A:\n");
     A.print_matrix(r);
-//    A.print_debug();
     printf("Matrix norm = %10.3e\n\n", A.get_norm());
     t = clock();
     if(A.get_cholesky(R, D, V))
@@ -208,7 +187,6 @@ int main(int argc, char *argv[])
 
     printf("R: \n");
     R.print_upper(r);
-//    R.print_debug();
     printf("D: \n");
     for(res = 0; res < r; res++)
         printf("%10.3e ", D[res]);
@@ -219,7 +197,6 @@ int main(int argc, char *argv[])
 
     printf("A_reversed: \n");
     A_reverse.print_matrix(r);
-//    A_reverse.print_debug();
     t1 = clock();
     printf ("%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d\n", argv[0], R.residual(A, A_reverse), t/CLOCKS_PER_SEC, s, n, m);
     t1 = clock() - t;
